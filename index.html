@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
+<html lang="ru" class="boot">
+  <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1156, initial-scale=1.0">
+<meta name="viewport" content="width=640, initial-scale=1.0">
 <title>Часы и погода</title>
 
 <style>
@@ -39,11 +39,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body { width: 1156px; height: 256px; overflow: hidden; }
+html { width: 100%; height: 100%; overflow: hidden; background: #0b1020; }
+body { width: 1280px; height: 256px; overflow: hidden; transform-origin: 0 0; transform: scale(.5); }
 
 body {
     position: relative;
-    background: #0b1d5c;
+        background: #0b1020;
     color: #fff;
     font-family: var(--f-text);
     text-rendering: geometricPrecision;
@@ -60,25 +61,23 @@ body {
    3  scrim (лёгкое затемнение)
    4  слайды с панелями
   ===================================================================== */
-.scene { position: absolute; left: 0; top: 0; width: 1156px; height: 256px; display: block; z-index: 0; }
+.scene { position: absolute; left: 0; top: 0; width: 1280px; height: 256px; display: block; z-index: 0; }
 
 /* ===== ВИДЕО: два слота, плавная смена и бесшовный цикл ===== */
 .vid {
     position: absolute; left: 0; top: 0;
-    width: 1156px; height: 256px;
+    width: 1280px; height: 256px;
     object-fit: cover;
     opacity: 0;
     z-index: 1;
     pointer-events: none;
     background: transparent;
-    /* отдельный GPU-слой: смена прозрачности не перерисовывает остальное */
-    will-change: opacity;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+  
 }
 
+#lightRain { position: absolute; left: 0; top: 0; width: 1280px; height: 256px; z-index: 3; pointer-events: none; opacity: 0; transition: opacity 2.5s ease; }
 #scrim {
-    position: absolute; left: 0; top: 0; width: 1156px; height: 256px;
+    position: absolute; left: 0; top: 0; width: 1280px; height: 256px;
     background: #050b2c; opacity: .06; transition: opacity 3s ease; pointer-events: none;
     z-index: 3;
 }
@@ -86,13 +85,13 @@ body {
 /* ===== слайды: сам слайд НЕ меняет прозрачность (иначе ломается backdrop-filter),
    плавно появляются/исчезают панели внутри ===== */
 .slide {
-    position: absolute; left: 0; top: 0; width: 1156px; height: 256px;
+    position: absolute; left: 0; top: 0; width: 1280px; height: 256px;
     z-index: 4; pointer-events: none;
     visibility: hidden;
     transition: visibility 0s linear .8s;      /* скрыть после того как панели погасли */
 }
 .slide.on { visibility: visible; transition-delay: 0s; }
-.slide .card { opacity: 0; transition: opacity .8s ease; }
+.slide .card { opacity: 0; transition: opacity .25s ease; }
 .slide.on .card { opacity: 1; }
 
 /* ===== анимации SVG-неба ===== */
@@ -427,68 +426,7 @@ body {
 .stat .lb, .fc .tm, #hdr { color: rgba(255,255,255,.92); }
 .fc .tm { font-weight: 600; }
 
-/* ===== Слайд 0: дуга солнца, время по центру, часы снизу ===== */
-#c0a {
-    left: 28px; top: 4px; width: 1100px; height: 248px;
-    border-radius: 46px;
-    border: 1px solid rgba(255,255,255,.30);
-    background:
-        linear-gradient(135deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.02) 100%),
-        rgba(8,18,56,.34);
-    -webkit-backdrop-filter: blur(5px) saturate(1.15);
-    backdrop-filter: blur(5px) saturate(1.15);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.50),
-        inset 0 -1px 0 rgba(255,255,255,.10),
-        inset 0 0 28px rgba(255,255,255,.04),
-        0 10px 30px rgba(0,0,0,.10);
-}
-#s0Arc { position: absolute; left: 0; top: 0; width: 1100px; height: 146px; overflow: visible; }
-#s0Date {
-    left: 36px; top: 16px;
-    font-family: var(--f-text); font-size: 20px; line-height: 24px; font-weight: 500;
-    color: rgba(255,255,255,.92);
-}
-#s0Pin { left: 36px; top: 42px; width: 16px; height: 16px; }
-#s0Pin svg { width: 100%; height: 100%; display: block; }
-#s0City {
-    left: 58px; top: 38px;
-    font-family: var(--f-text); font-size: 20px; line-height: 24px; font-weight: 500;
-    color: rgba(255,255,255,.85);
-}
-#s0Time {
-    left: 0; top: 54px; width: 1100px; text-align: center;
-    font-family: var(--f-disp); font-size: 68px; line-height: 72px; font-weight: 400; letter-spacing: -2px;
-    font-variant-numeric: tabular-nums; color: #fff;
-}
-.s0ev { position: absolute; top: 66px; width: 120px; text-align: center; white-space: nowrap; }
-.s0ev .ei { display: block; width: 44px; height: 44px; margin: 0 auto; filter: drop-shadow(0 4px 8px rgba(255,150,0,.25)); }
-.s0ev .k { font-family: var(--f-text); font-size: 18px; line-height: 22px; font-weight: 500; color: rgba(255,255,255,.85); }
-.s0ev .v { font-family: var(--f-disp); font-size: 28px; line-height: 32px; font-weight: 500; color: #fff; font-variant-numeric: tabular-nums; }
-#s0Band {
-    position: absolute; left: 0; top: 150px; width: 1100px; height: 98px;
-    background: linear-gradient(180deg, rgba(4,10,40,0), rgba(4,10,40,.24));
-}
-#s0Band::before {
-    content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.30) 12%, rgba(255,255,255,.30) 88%, rgba(255,255,255,0));
-}
-#s0Hours { position: absolute; left: 25px; top: 0; width: 1050px; height: 240px; }
-.s0h {
-    position: absolute; top: 154px; width: 134px; height: 90px; padding-top: 2px; border-radius: 30px;
-    display: flex; flex-direction: column; align-items: center;
-}
-.s0h .l { font-family: var(--f-text); font-size: 17px; line-height: 20px; font-weight: 500; letter-spacing: -.1px; color: rgba(255,255,255,.80); }
-.s0h.now { background: rgba(255,255,255,.13); }
-.s0h.now .l { color: #fff; font-weight: 600; }
-.s0h .i { width: 36px; height: 36px; margin-top: 3px; filter: drop-shadow(0 4px 8px rgba(20,40,120,.28)); }
-.s0h .i.sun { filter: drop-shadow(0 4px 8px rgba(255,150,0,.30)); }
-.s0h .i svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.s0h .t { margin-top: 2px; font-family: var(--f-disp); font-size: 24px; line-height: 26px; font-weight: 500; letter-spacing: -.4px; color: #fff; font-variant-numeric: tabular-nums; }
 
-#s0Date, #s0City, #s0Time, .s0ev .k, .s0ev .v, .s0h .l, .s0h .t {
-    text-shadow: 0 1px 2px rgba(5,12,45,.55), 0 2px 10px rgba(5,12,45,.45), 0 0 24px rgba(5,12,45,.30);
-}
 
 /* ===== Слайд 2: «Прогноз на 5 дней» как на референсе ===== */
 #c2a { left: 28px; top: 36px; width: 1100px; height: 184px; }
@@ -523,15 +461,50 @@ body {
 
 .d5t, .d5c .dn, .d5c .hi, .d5c .lo {
     text-shadow: 0 1px 2px rgba(5,12,45,.55), 0 2px 10px rgba(5,12,45,.45), 0 0 24px rgba(5,12,45,.30);
-}
+} 
+
+
+.noblur #c1a, .noblur #c2a { -webkit-backdrop-filter: none; backdrop-filter: none; }
+</style>
+<style>
+/* ===== ПЛАВНОСТЬ: меньше лишней нагрузки на плеер ===== */
+/* невидимый слой с каплями не крутится, пока не нужен (включается из JS) */
+#lightRain { display: none; }
+/* тени-фильтры на анимированных иконках перерисовываются каждый кадр — убираем */
+#bigIc, #bigIc.sun, .d5c .di, .d5c .di.sun, .fc .wi, .fc .wi.sun { filter: none !important; }
+
+
+
+/* пока идёт загрузка — панели скрыты, потом плавно проявляются */
+html.boot .slide.on .card { opacity: 0; }
+html.boot #scrim { transition: none !important; }
+html.boot .scene { display: none; }
+.slide .card { transition: opacity .8s ease; }
 </style>
 
 
 
 
+
+<style>
+/* ===== ЭКРАН 640x128: логическая сцена 1280x256, масштаб подбирается скриптом (по умолч. 0.5) ===== */
+#c1a { width: 1224px; }
+#c2a { width: 1224px; }
+#timeTxt, #dateTxt { left: 74px; }
+#vl1 { left: 440px; }
+#bigIc { left: 498px; }
+#bigTemp { left: 634px; }
+#bigCond { left: 638px; }
+#vl2 { left: 903px; }
+#pin1 { left: 970px; }
+#city1 { left: 1008px; }
+#feels1 { left: 970px; }
+#d5wrap { width: 1020px; }
+.d5c { width: 204px; }
+</style>
 </head>
 <body>
-
+<script>try { var pp = localStorage.getItem("wx_poster"); if (pp) document.body.style.background = "url(" + pp + ") 0 0 / 100% 100% no-repeat"; } catch (e) {}</script>
 <!-- ===================== ОБЩИЕ ИКОНКИ ===================== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -797,22 +770,70 @@ body {
       </path>
     </symbol>
 
-    <symbol id="ic-fog" viewBox="0 0 100 100">
-      <g stroke="#e3edff" stroke-width="6" stroke-linecap="round" opacity=".9">
-        <line x1="18" y1="34" x2="82" y2="34">
-          <animateTransform attributeName="transform" type="translate" values="-6 0;6 0;-6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="6s" repeatCount="indefinite"/>
-        </line>
-        <line x1="26" y1="50" x2="90" y2="50">
-          <animateTransform attributeName="transform" type="translate" values="6 0;-6 0;6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="7s" repeatCount="indefinite"/>
-        </line>
-        <line x1="14" y1="66" x2="78" y2="66">
-          <animateTransform attributeName="transform" type="translate" values="-6 0;6 0;-6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="8s" begin="-3s" repeatCount="indefinite"/>
-        </line>
-        <line x1="24" y1="82" x2="86" y2="82">
-          <animateTransform attributeName="transform" type="translate" values="6 0;-6 0;6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="6.5s" begin="-2s" repeatCount="indefinite"/>
-        </line>
+   <linearGradient id="gFogL" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#eaf2ff" stop-opacity="0"/>
+  <stop offset=".22" stop-color="#eaf2ff" stop-opacity=".95"/>
+  <stop offset=".78" stop-color="#eaf2ff" stop-opacity=".95"/>
+  <stop offset="1" stop-color="#eaf2ff" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="gFogLN" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#b9c7ef" stop-opacity="0"/>
+  <stop offset=".22" stop-color="#b9c7ef" stop-opacity=".9"/>
+  <stop offset=".78" stop-color="#b9c7ef" stop-opacity=".9"/>
+  <stop offset="1" stop-color="#b9c7ef" stop-opacity="0"/>
+</linearGradient>
+
+<!-- ТУМАН ДЕНЬ: чистые мягкие полосы -->
+<symbol id="ic-fog" viewBox="0 0 100 100">
+  <g fill="#eef4ff">
+    <rect x="14" y="24" width="60" height="9" rx="4.5" opacity="1">
+      <animateTransform attributeName="transform" type="translate" values="-5 0;7 0;-5 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="7s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="28" y="41" width="62" height="9" rx="4.5" opacity=".85">
+      <animateTransform attributeName="transform" type="translate" values="6 0;-6 0;6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="8s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="10" y="58" width="68" height="9" rx="4.5" opacity=".7">
+      <animateTransform attributeName="transform" type="translate" values="-6 0;5 0;-6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="9s" begin="-3s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="24" y="75" width="52" height="9" rx="4.5" opacity=".5">
+      <animateTransform attributeName="transform" type="translate" values="5 0;-7 0;5 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="7.5s" begin="-2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</symbol>
+
+
+<!-- ТУМАН НОЧЬ: месяц за тёмным облаком + холодные полосы -->
+<symbol id="ic-fogN" viewBox="0 0 100 100">
+  <mask id="mMoon3">
+    <rect width="100" height="100" fill="#fff"/>
+    <circle cx="80" cy="16" r="14" fill="#000"/>
+  </mask>
+  <circle cx="68" cy="24" r="17" fill="url(#gMoon)" mask="url(#mMoon3)"/>
+  <g fill="#fff">
+    <circle cx="90" cy="38" r="1.5"><animate attributeName="opacity" values=".25;1;.25" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="52" cy="8" r="1.3"><animate attributeName="opacity" values=".25;1;.25" dur="3.6s" begin="-1.4s" repeatCount="indefinite"/></circle>
+  </g>
+  <g transform="translate(6 4) scale(.64)">
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="-3 0;4 0;-3 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="9s" repeatCount="indefinite"/>
+      <g fill="url(#gCloudDark)">
+        <circle cx="30" cy="62" r="17"/><circle cx="52" cy="48" r="23"/><circle cx="75" cy="60" r="18"/>
+        <rect x="22" y="60" width="62" height="20" rx="10"/>
       </g>
-    </symbol>
+    </g>
+  </g>
+  <g fill="url(#gFogLN)">
+    <rect x="8" y="58" width="80" height="7" rx="3.5">
+      <animateTransform attributeName="transform" type="translate" values="-6 0;6 0;-6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="18" y="71" width="76" height="7" rx="3.5">
+      <animateTransform attributeName="transform" type="translate" values="6 0;-6 0;6 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="7s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="4" y="84" width="70" height="7" rx="3.5">
+      <animateTransform attributeName="transform" type="translate" values="-5 0;7 0;-5 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="8s" begin="-3s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+</symbol>
 
     <!-- закат (солнце над горизонтом + стрелка вниз) и восход (стрелка вверх) -->
     <symbol id="ic-sunset" viewBox="0 0 100 100">
@@ -983,72 +1004,13 @@ body {
 <video id="vidA" class="vid" muted playsinline preload="auto" disablepictureinpicture></video>
 <video id="vidB" class="vid" muted playsinline preload="auto" disablepictureinpicture></video>
 <div id="scrim"></div>
+<svg id="lightRain" viewBox="0 0 1156 256" preserveAspectRatio="none" stroke="#dbe8ff" stroke-linecap="round"></svg>
 
 
 <!-- =====================================================================
     СЛАЙД 1 — время и погода сейчас
     ===================================================================== -->
-<!-- =====================================================================
-    СЛАЙД 0 — дуга солнца, время по центру, восход/закат, почасовой прогноз
-    ===================================================================== -->
-<div class="slide on" id="slide0">
-
-<div class="card" id="c0a">
-    <div class="tint"></div>
-
-    <svg id="s0Arc" viewBox="0 0 1100 146">
-      <defs>
-        <linearGradient id="s0Dim" gradientUnits="userSpaceOnUse" x1="180" y1="0" x2="920" y2="0">
-          <stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".2" stop-color="#fff" stop-opacity=".50"/>
-          <stop offset=".8" stop-color="#fff" stop-opacity=".50"/><stop offset="1" stop-color="#fff" stop-opacity=".10"/>
-        </linearGradient>
-        <clipPath id="s0Clip"><rect id="s0ClipR" x="0" y="0" width="0" height="146"/></clipPath>
-        <mask id="s0MoonMask" maskUnits="userSpaceOnUse" x="-20" y="-20" width="40" height="40">
-          <rect x="-20" y="-20" width="40" height="40" fill="#fff"/>
-          <circle cx="8" cy="-5" r="13" fill="#000"/>
-        </mask>
-      </defs>
-      <path d="M180 108 Q550 -68 920 108" fill="none" stroke="url(#s0Dim)" stroke-width="5" stroke-linecap="round"/>
-      <path d="M180 108 Q550 -68 920 108" fill="none" stroke="#ffcc1f" stroke-width="16" stroke-linecap="round" opacity=".20" clip-path="url(#s0Clip)"/>
-      <path d="M180 108 Q550 -68 920 108" fill="none" stroke="#ffd23a" stroke-width="5" stroke-linecap="round" clip-path="url(#s0Clip)"/>
-      <g id="s0Sun" style="opacity:0">
-        <circle r="42" fill="url(#gSunGlow)"/>
-        <g fill="#ffd54a">
-          <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(0)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(40)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(85)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(130)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(180)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(225)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(270)"/>
-          <circle cx="0" cy="-30" r="2.8" transform="rotate(315)"/>
-        </g>
-        <circle r="18" fill="url(#gSunDisc)"/>
-      </g>
-      <g id="s0Moon" style="opacity:0">
-        <circle r="36" fill="url(#moonGlow)"/>
-        <circle r="16" fill="#eef3ff" mask="url(#s0MoonMask)"/>
-      </g>
-    </svg>
-
-    <div class="abs" id="s0Date">--</div>
-    <div class="abs" id="s0Pin"><svg viewBox="0 0 24 24"><use href="#ic-pin"/></svg></div>
-    <div class="abs" id="s0City">Тирасполь</div>
-
-    <div class="abs" id="s0Time">--:--</div>
-
-    <div class="s0ev" style="left:35px"><svg class="ei" viewBox="0 0 100 100"><use id="s0IcL" href="#ic-sunrise"/></svg><div class="v" id="s0Sr">--:--</div></div>
-    <div class="s0ev" style="left:945px"><svg class="ei" viewBox="0 0 100 100"><use id="s0IcR" href="#ic-sunset"/></svg><div class="v" id="s0Ss">--:--</div></div>
-
-    <div id="s0Band"></div>
-    <div id="s0Hours"></div>
-</div>
-
-</div>
-
-
-<div class="slide" id="slide1">
+<div class="slide on" id="slide1">
 
 <div class="card" id="c1a">
     <div class="tint"></div>
@@ -1098,10 +1060,38 @@ body {
 
 </div>
 
+</div>
+
 
 <script>
-if (location.search.indexOf("noblur") > -1) document.documentElement.className += " noblur";
+  var T0 = Date.now();
+/* подгонка под размер экрана: сцена 1280x256 масштабируется под окно (640x128 -> 0.5) */
+function fitScreen() {
+    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 256);
+    if (!(s > 0)) return;
+    document.body.style.transform = "scale(" + s + ")";
+}
+fitScreen();
+window.addEventListener("resize", fitScreen);
 
+if (location.search.indexOf("withblur") < 0) document.documentElement.className += " noblur";
+var BOOT = { font: 0, wx: 0, vid: 0 }, bootDone = false;
+function bootReveal() {
+    if (bootDone) return;
+    bootDone = true;
+    document.documentElement.className = document.documentElement.className.replace(/\bboot\b/, "");
+}
+function bootStep(k) {
+    BOOT[k] = 1;
+    if (BOOT.font && BOOT.wx && BOOT.vid) setTimeout(bootReveal, 150);
+}
+setTimeout(bootReveal, 8000);
+(function () {
+    if (!document.fonts || !document.fonts.load) { bootStep("font"); return; }
+    var f = ['500 20px "SF Pro Display"','400 20px "SF Pro Display"','600 20px "SF Pro Text"','500 20px "SF Pro Text"'], n = 0;
+    function one() { if (++n === f.length) bootStep("font"); }
+    for (var i = 0; i < f.length; i++) document.fonts.load(f[i]).then(one, one);
+})();
 /* =====================================================================
   ФОН ОТ РЕАЛЬНОЙ ПОГОДЫ
   Проверка без ожидания: index.html?bg=clear | cloud | overcast | rain | snow | storm | fog | dusk | night | nightrain | nightsnow
@@ -1161,6 +1151,19 @@ function setOp(id, v) { var e = $(id); if (e) e.style.opacity = Math.round(clamp
     $("fxSplash").innerHTML = sp;
 })();
 
+/* лёгкий дождь: редкие тонкие капли поверх пасмурного видео */
+(function () {
+    var out = "", k, x, len;
+    for (k = 0; k < 55; k++) {
+        x = Math.random() * 1190;
+        len = 9 + Math.random() * 7;
+        out += '<line class="rd" x1="' + x.toFixed(0) + '" y1="0" x2="' + (x - 2).toFixed(0) + '" y2="' + len.toFixed(0)
+            + '" stroke-width="' + (0.8 + Math.random() * 0.5).toFixed(1) + '" opacity="' + (0.18 + Math.random() * 0.22).toFixed(2)
+            + '" style="animation-duration:' + (0.9 + Math.random() * 0.6).toFixed(2) + 's;animation-delay:-' + (Math.random() * 1.5).toFixed(2) + 's"/>';
+    }
+    $("lightRain").innerHTML = out;
+})();
+
 /* код погоды -> параметры сцены */
 function wxState(code) {
     var p = { ca: 1, cb: 1, cc: 1, cd: 0.25, gray: 0.7, rain: 0, snow: 0, fog: 0, storm: 0 };
@@ -1197,11 +1200,12 @@ function tsMin(s) {
     return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16)) / 60000;
 }
 
-/* день / сумерки / ночь: плавные веса по восходу и закату */
+var TOD_AM = false;
 function todWeights(d) {
     var cur = d.current, day, night;
     if (d.daily && d.daily.sunrise && d.daily.sunset && d.daily.sunrise[0] && d.daily.sunset[0]) {
         var m = toMin(cur.time), sr = toMin(d.daily.sunrise[0]), ss = toMin(d.daily.sunset[0]);
+        TOD_AM = m < 720;  
         if (m >= sr && m <= ss) { day = Math.min(1, Math.min(m - sr, ss - m) / 60); night = 0; }
         else { day = 0; night = Math.min(1, (m < sr ? sr - m : m - ss) / 60); }
     } else {
@@ -1212,7 +1216,7 @@ function todWeights(d) {
 
 var BG_PRESETS = {
     clear: [0, "d"], cloud: [2, "d"], overcast: [3, "d"], rain: [63, "d"], snow: [73, "d"], storm: [95, "d"], fog: [45, "d"],
-    mostly: [1, "d"], drizzle: [53, "d"], dusk: [1, "s"],
+    mostly: [1, "d"], drizzle: [53, "d"], lightrain: [61, "d"], nightlightrain: [61, "n"], dusk: [1, "s"],
     night: [0, "n"], nightcloud: [2, "n"], nightovercast: [3, "n"], nightfog: [45, "n"],
     nightrain: [63, "n"], nightsnow: [73, "n"], stormnight: [95, "n"]
 };
@@ -1297,6 +1301,10 @@ function setScene(p) {
    • Пока играет видео, тяжёлое SVG-небо полностью отключено (display:none) —
      это главный источник лагов в старой версии.
    • Сторожок: если видео зависло/встало на паузу — оно само перезапускается.
+
+   ВАЖНО ДЛЯ ПЛАВНОСТИ: видео нужно заранее пережать в точный размер экрана
+   1156×256, 30 кадров/с (см. convert_videos.bat). Тогда плеер почти не
+   нагружается, и плавный стык цикла работает без рывков.
    ===================================================================== */
 var V = {
     zakat:      "assets/zakat.mp4",
@@ -1304,6 +1312,7 @@ var V = {
     overcast:   "assets/pasmyrno.mp4",
     partly:     "assets/peremen_oblako.mp4",
     rain:       "assets/rain.mp4",
+    rainLight:  "assets/rain_light.mp4",      // небольшой дождь (если файла нет — пасмурное видео + капли кодом)
     rainNight:  "assets/rain_night.mp4",
     snow:       "assets/snow.mp4",
     storm:      "assets/storm.mp4",
@@ -1313,11 +1322,12 @@ var V = {
 };
 
 /* ===== СКОРОСТЬ ВИДЕО =====
-   SPEED — общая скорость всех роликов: 1 = как в файле, 0.6 = заметно медленнее, 0.4 = совсем плавно.
-   Быстро подобрать: открой index.html?speed=0.5
-   SPEED_FILE — поправка для отдельного ролика, если какой-то всё ещё быстрее остальных
-   (например "assets/rain.mp4": 0.7 — этот ролик будет ещё на 30% медленнее). */
-var SPEED = +((location.search.match(/speed=([\d.]+)/) || [])[1]) || 0.9;
+   SPEED — общая скорость всех роликов. Для плавности держим 1 (как в файле):
+   любая другая скорость даёт неровный показ кадров. Если нужно медленнее —
+   замедляй сам ролик при пережатии, а не здесь.
+   Быстро проверить: открой index.html?speed=0.5
+   SPEED_FILE — поправка для отдельного ролика. */
+var SPEED = +((location.search.match(/speed=([\d.]+)/) || [])[1]) || 1;
 var SPEED_FILE = {
     "assets/zakat.mp4": 1,
     "assets/fog.mp4": 1,
@@ -1332,7 +1342,8 @@ var SPEED_FILE = {
     "assets/yasna_night.mp4": 1
 };
 /* ===== ПОЛОЖЕНИЕ ВИДЕО ПО ВЫСОТЕ =====
-   Ролик шире и выше экрана, поэтому видна только полоса 1156×256.
+   Нужно только для НЕпережатых роликов (они шире и выше экрана).
+   Если видео уже пережато в 1156×256 — на положение это не влияет.
    Число 0–100 (%): 50 = по центру, больше = картинка едет ВВЕРХ (видно нижнюю часть ролика),
    меньше = картинка едет ВНИЗ (видно верхнюю часть).
    Быстро подобрать: index.html?bg=stormnight&ypos=75 */
@@ -1349,7 +1360,9 @@ function clipRate(file) {
     var r = SPEED * (SPEED_FILE[file] || 1);
     return r < 0.1 ? 0.1 : (r > 2 ? 2 : r);
 }
-
+/* SIMPLE = true  — обычный loop браузера (на стыке бывает короткий рывок);
+   SIMPLE = false — плавный стык двумя слотами (нужны пережатые видео). */
+var SIMPLE = true;
 var VID = {
     slots: [$("vidA"), $("vidB")],
     cur: -1,            // индекс видимого слота (-1 — видео нет)
@@ -1357,8 +1370,8 @@ var VID = {
     want: "",           // что хотим играть
     busy: false,        // идёт смена ролика или стык цикла
     pending: null,      // запрос, пришедший во время busy
-    fade: 1400,         // мс — плавность смены ролика
-    loopFade: 1500,     // мс — плавность стыка цикла
+    fade: 400,         // мс — плавность смены ролика
+    loopFade: 1000,     // мс — плавность стыка цикла
     svgTimer: 0,
     retryTimer: 0,
     log: []             // журнал выбора ролика: "код погоды|файл" (виден в ?debug)
@@ -1381,8 +1394,7 @@ var VID = {
 function showSvg(on) {
     var s = $("bgSvg");
     clearTimeout(VID.svgTimer);
-    if (on) { s.style.display = "block"; }
-    else { s.style.display = "none"; }
+      s.style.display = "none";
 }
 
 function safePlay(v) {
@@ -1404,7 +1416,8 @@ function startClip(v, file, reuse, onReady, onFail) {
     v.addEventListener("playing", ok);
     v.addEventListener("error", bad);
     timer = setTimeout(bad, 12000);
-    v.pause();
+       v.pause();
+    v.loop = SIMPLE;
     if (reuse && v._file === file) {
         try { v.currentTime = 0; } catch (e) {}
     } else {
@@ -1415,6 +1428,7 @@ function startClip(v, file, reuse, onReady, onFail) {
     try { v.defaultPlaybackRate = clipRate(file); v.playbackRate = clipRate(file); } catch (e0) {}
     v.style.objectPosition = "50% " + clipY(file) + "%";
     var p;
+    
     try { p = v.play(); } catch (e2) { bad(); return; }
     if (p && typeof p.catch === "function") p.catch(bad);
 }
@@ -1441,7 +1455,14 @@ function flushPending() {
     VID.pending = null;
     vidSet(f);
 }
-
+function savePoster(v) {
+    try {
+        var c = document.createElement("canvas");
+        c.width = 578; c.height = 128;
+        c.getContext("2d").drawImage(v, 0, 0, 578, 128);
+        localStorage.setItem("wx_poster", c.toDataURL("image/jpeg", 0.6));
+    } catch (e) {}
+}
 /* смена ролика */
 function vidSwitch(file) {
     var old = VID.cur >= 0 ? VID.slots[VID.cur] : null;
@@ -1450,16 +1471,21 @@ function vidSwitch(file) {
     var prevFile = VID.file;
     VID.busy = true;
     VID.file = file;
-    startClip(nv, file, false, function () {
+      startClip(nv, file, false, function () {
+              bootStep("vid");
+              showSvg(false);
+
         VID.cur = idx;
         fadeIn(nv, VID.fade, function () {
             if (old) hideNow(old);
             showSvg(false);                      // видео полностью закрывает небо — небо выключаем
+                        setTimeout(function () { savePoster(nv); }, 1500);
             VID.busy = false;
             flushPending();
         });
-    }, function () {
+       }, function () {
         /* не загрузилось: оставляем что было, повторим позже */
+        bootStep("vid");
         VID.file = prevFile;
         VID.busy = false;
         clearTimeout(VID.retryTimer);
@@ -1518,9 +1544,9 @@ function vidSet(file) {
 setInterval(function () {
     if (VID.cur < 0 || VID.busy) return;
     var v = VID.slots[VID.cur], d = v.duration;
-    if (!d || d !== d || d === Infinity) return;
+    if (!d) return;
+    if (SIMPLE) { v.loop = true; return; }
     var rate = v.playbackRate || 1;
-    if (d / rate < (VID.loopFade / 1000) * 2 + 1) { v.loop = true; return; }     // совсем короткий ролик — обычный loop
     v.loop = false;
     if (v.currentTime >= d - (VID.loopFade / 1000 + 0.5) * rate) vidLoop();
 }, 150);
@@ -1533,7 +1559,7 @@ function watchdog() {
     if (v.paused && !v.ended) { safePlay(v); wdStuck = 0; return; }
     if (v.currentTime === wdLast) {
         wdStuck++;
-        if (wdStuck >= 3) {                       // ~6 секунд без движения кадров
+                if (wdStuck >= 8) {                // ~6 секунд без движения кадров
             wdStuck = 0;
             var f = VID.file;
             VID.file = "";                        // заставим vidSwitch перезагрузить ролик в свободный слот
@@ -1550,10 +1576,14 @@ function pickVideo(code, w) {
     var night = w[2] >= 0.5, dusk = w[1] >= 0.35;
     var snow  = (code >= 71 && code <= 77) || code === 85 || code === 86;
     var rain  = (code >= 51 && code <= 67) || (code >= 80 && code <= 82);
+    var ov = false;
+    var light = (code === 51 || code === 53 || code === 55 || code === 61 || code === 80);   // морось / небольшой дождь
     var file = "", dim = false;
 
     if (code >= 95)                          file = night ? V.stormNight : V.storm;
     else if (snow)                         { file = V.snow; dim = night; }
+    else if (rain && light && LIGHT_OK)    { file = V.rainLight; dim = night; }   // есть своё видео небольшого дождя
+    else if (rain && light)                { file = V.overcast; dim = night; ov = true; }   // видео нет: пасмурное небо + редкие капли
     else if (rain)                           file = night ? V.rainNight : V.rain;
     else if (dusk && code <= 2)              file = V.zakat;                 // закат/рассвет — только при ясной и малооблачной погоде
     else if (code === 45 || code === 48)   { file = V.fog; dim = night; }
@@ -1562,20 +1592,37 @@ function pickVideo(code, w) {
     else if (code === 0 || code === 1)       file = night ? V.clearNight : V.sunny;
 
     /* dim = дневной ролик показываем ночью -> затемняем */
-    return { file: file, dim: dim };
+    return { file: file, dim: dim, light: ov };
 }
 
 function updateWeatherVideo(code, w) {
     var r = pickVideo(code, w);
-    VID.want = r.file;
+    VID.want = r.file; VID.lc = code; VID.lw = w;
     if (VID.log[VID.log.length - 1] !== (code + "|" + r.file)) {
         VID.log.push(code + "|" + r.file);
         if (VID.log.length > 6) VID.log.shift();
     }
-    vidSet(r.file);
-    if (r.file) $("scrim").style.opacity = r.dim ? 0.5 : 0.06;
+      vidSet(r.file);
+             try { if (r.file) localStorage.setItem("wx_last_vid", r.file); } catch (e) {}
+    if (!r.file) bootStep("vid");
+
+    if (r.file) {
+    var nativeNight = (r.file === V.clearNight || r.file === V.rainNight || r.file === V.stormNight || r.file === V.zakat);
+var dk = nativeNight ? 0 : (w[2] * 0.58 + w[1] * 0.22);   // было 0.46 и 0.20
+    var baseOp = r.light ? 0.14 : 0.06;
+    var tint = w[2] >= 0.5 ? "#050b2c"                              // ночь: глубокий синий
+             : (w[1] > 0.2 ? (TOD_AM ? "#4a3550" : "#2a1740")       // утро: розоватый, вечер: фиолетовый
+             : "#050b2c");
+    $("scrim").style.background = tint;
+   $("scrim").style.opacity = Math.min(0.72, baseOp + dk);    // было 0.62
+}
+    /* слой с каплями включаем только когда он нужен — иначе он зря грузит плеер */
+    $("lightRain").style.display = r.light ? "block" : "none";
+    $("lightRain").style.opacity = r.light ? 1 : 0;
 }
 
+/* отдельного видео небольшого дождя нет: пасмурное видео + капли кодом */
+var LIGHT_OK = false;
 function applyBg(d, noVideo) {
     var p, w, cc, code;
     if (bgForce && BG_PRESETS[bgForce]) {
@@ -1618,13 +1665,13 @@ function nowLocalHour() {
 function setCardFx(code, isDay) { return; }
 
 /* =====================================================================
-  ПЕРЕКЛЮЧЕНИЕ СЛАЙДОВ  (3 слайда: дуга солнца → время+сейчас → 5 дней)
-  Открыть сразу нужный слайд: index.html?slide=3
+  ПЕРЕКЛЮЧЕНИЕ СЛАЙДОВ  (2 слайда: время+сейчас → прогноз по часам)
+  Открыть сразу нужный слайд: index.html?slide=2
   ===================================================================== */
 
 
 var SLIDE_SECONDS = 10;
-var slideEls = [document.getElementById("slide0"), document.getElementById("slide1"), document.getElementById("slide2")];
+var slideEls = [document.getElementById("slide1"), document.getElementById("slide2")];
 var curSlide = 0;
 function showSlide(i) {
     curSlide = i;
@@ -1637,7 +1684,13 @@ function showSlide(i) {
     var m = location.search.match(/slide=(\d)/);
     if (m && +m[1] >= 1 && +m[1] <= slideEls.length) { showSlide(+m[1] - 1); return; }
     showSlide(0);
-    setInterval(function () { showSlide((curSlide + 1) % slideEls.length); }, SLIDE_SECONDS * 1000);
+        var lastSw = Date.now();
+    setInterval(function () {
+        var n = Date.now();
+        if (n - lastSw < SLIDE_SECONDS * 1000 - 300) return;
+        lastSw = n;
+        showSlide((curSlide + 1) % slideEls.length);
+    }, 1000);
 })();
 
 
@@ -1649,10 +1702,7 @@ var DAYS = ["Воскресенье","Понедельник","Вторник","
 var DAYS_SHORT = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
 var MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 function pad2(n) { return (n < 10 ? "0" : "") + n; }
-/* для проверки: index.html?time=21:22 — страница ведёт себя так, будто сейчас это время */
-var FAKE_TIME = location.search.match(/time=(\d{1,2}):(\d{2})/);
 function nowLocal() {
-    if (FAKE_TIME) { var f = new Date(); f.setHours(+FAKE_TIME[1], +FAKE_TIME[2], 0, 0); return f; }
     try { return new Date(new Date().toLocaleString("en-US", { timeZone: TZ })); }
     catch (e) { return new Date(); }
 }
@@ -1664,9 +1714,6 @@ function tick() {
     lastMin = key;
     document.getElementById("timeTxt").textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
     document.getElementById("dateTxt").textContent = DAYS_SHORT[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()];
-    document.getElementById("s0Time").textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
-    document.getElementById("s0Date").textContent = DAYS_SHORT[d.getDay()] + ", " + d.getDate() + " " + MONTHS[d.getMonth()];
-    if (typeof placeSun === "function" && typeof SUN !== "undefined" && SUN) placeSun();
 }
 tick();
 setInterval(tick, 1000);
@@ -1678,10 +1725,10 @@ setInterval(tick, 1000);
 var LAT = 46.84, LON = 29.58;
 var STEP_HOURS = 3;
 var SLOTS = 5;          // сколько ячеек в почасовом прогнозе (закат/восход занимает одну из них)
-var DAYS_COUNT = 5;     // сколько дней запрашиваем (нужны для восхода/заката и почасового прогноза)
+var DAYS_COUNT =5;     // сколько дней запрашиваем (нужны для восхода/заката и почасового прогноза)
 var REFRESH_OK = 15 * 60 * 1000;
 var REFRESH_FAIL = 60 * 1000;
-var CACHE_KEY = "wx_tiraspol_v6";
+var CACHE_KEY = "wx_tiraspol_v5";
 var CACHE_MAX_AGE = 20 * 60 * 1000;      // кеш старше 20 минут не используем для выбора видео
 var staleCache = null;
 
@@ -1709,7 +1756,7 @@ function iconFor(code, isDay) {
     if (code === 0 || code === 1) return isDay ? "ic-sun" : "ic-moon";
     if (code === 2)               return isDay ? "ic-partly" : "ic-partlyN";
  if (code === 3)               return isDay ? "ic-cloud" : "ic-partlyN";
-    if (code === 45 || code === 48) return "ic-fog";
+   if (code === 45 || code === 48) return isDay ? "ic-fog" : "ic-fogN";
     if (code >= 51 && code <= 57) return "ic-drizzle";
     if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "ic-rain";
     if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "ic-snow";
@@ -1725,6 +1772,8 @@ function condText(code, isDay) {
     if (code === 45 || code === 48) return "Туман";
     if (code >= 51 && code <= 55) return "Морось";
     if (code === 56 || code === 57 || code === 66 || code === 67) return "Ледяной дождь";
+    if (code === 61 || code === 80) return "Небольшой дождь";
+    if (code === 65) return "Сильный дождь";
     if (code >= 61 && code <= 65) return "Дождь";
     if (code >= 80 && code <= 82) return "Ливень";
     if (code === 85 || code === 86) return "Снегопад";
@@ -1813,15 +1862,13 @@ document.getElementById("feels1").textContent = "Ощущается как " + f
     }
 
     try { renderDays(d); } catch (e) {}
-    try { renderSun(d); } catch (e) {}
 
     curWind = +cur.wind_speed_10m || 0;
-    try { applyBg(d, noVideo); } catch (e) {}
+        try { applyBg(d, noVideo); } catch (e) {}
+    bootStep("wx");
 }
-
 var MONTHS_SHORT = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
 
-/* ---- прогноз на 5 дней (слайд 2) ---- */
 function renderDays(d) {
     var dl = d.daily;
     if (!dl || !dl.time || !dl.temperature_2m_min || !dl.temperature_2m_max) return;
@@ -1831,105 +1878,15 @@ function renderDays(d) {
         name = i === 0 ? "Сегодня" : DAYS_SHORT[dt.getDay()] + ", " + dt.getDate() + " " + MONTHS_SHORT[dt.getMonth()];
         code = dl.weather_code ? dl.weather_code[i] : 3;
         icon = iconFor(code, true);
-        html += '<div class="d5c" style="left:' + (i * 180) + 'px">'
+        html += '<div class="d5c" style="left:' + (i * 204) + 'px">'
               +   '<div class="dn">' + name + '</div>'
               +   '<div class="di' + (icon === "ic-sun" ? " sun" : "") + '"><svg viewBox="0 0 100 100"><use href="#' + icon + '"/></svg></div>'
               +   '<div class="tt"><span class="hi">' + fmtTemp(dl.temperature_2m_max[i]) + '</span><span class="lo">' + fmtTemp(dl.temperature_2m_min[i]) + '</span></div>'
               + '</div>';
-        if (i > 0) html += '<div class="vline" style="left:' + (i * 180) + 'px; top:32px; height:120px"></div>';
+        if (i > 0) html += '<div class="vline" style="left:' + (i * 204) + 'px; top:32px; height:120px"></div>';
     }
     document.getElementById("d5wrap").innerHTML = html;
 }
-
-/* ---- слайд 0: дуга солнца + почасовой прогноз ---- */
-var SUN = null;
-var S_STEP = 2;          // шаг почасового прогноза, часов (1 = каждый час)
-var S_SLOTS = 7;         // сколько ячеек внизу
-var S_X0 = 180, S_X2 = 920, S_Y0 = 108, S_CY = -68;   // геометрия дуги (как в path в HTML)
-
-/* День: дуга от восхода до заката, ведёт солнце. Ночь: дуга от заката до следующего восхода, ведёт луна.
-   Подписи по краям меняются вместе с этим. */
-function placeSun() {
-    if (!SUN) return;
-    var n = nowLocal(), m = n.getHours() * 60 + n.getMinutes();
-    var sun = $("s0Sun"), moon = $("s0Moon"), clip = $("s0ClipR");
-    if (!sun || !moon || !clip) return;
-    var t, night = false, total, el, u, x, y, pos, lIc, lTx, rIc, rTx;
-    if (m >= SUN.sr && m <= SUN.ss) {
-        t = (m - SUN.sr) / Math.max(1, SUN.ss - SUN.sr);
-        lIc = "#ic-sunrise"; lTx = SUN.srS;
-        rIc = "#ic-sunset";  rTx = SUN.ssS;
-    } else {
-        night = true;
-        if (m > SUN.ss) {                       // вечер: до завтрашнего восхода
-            total = 1440 - SUN.ss + SUN.srT; el = m - SUN.ss; rTx = SUN.srTS;
-        } else {                                // раннее утро: до сегодняшнего восхода
-            total = 1440 - SUN.ss + SUN.sr; el = m + 1440 - SUN.ss; rTx = SUN.srS;
-        }
-        t = el / Math.max(1, total);
-        lIc = "#ic-sunset";  lTx = SUN.ssS;
-        rIc = "#ic-sunrise";
-    }
-    t = clamp01(t);
-    x = S_X0 + t * (S_X2 - S_X0);
-    u = 1 - t;
-    y = u * u * S_Y0 + 2 * u * t * S_CY + t * t * S_Y0;
-    pos = "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ")";
-    if (night) {
-        moon.setAttribute("transform", pos);
-        moon.style.opacity = 1; sun.style.opacity = 0;
-        clip.setAttribute("width", 0);
-    } else {
-        sun.setAttribute("transform", pos);
-        sun.style.opacity = 1; moon.style.opacity = 0;
-        clip.setAttribute("width", Math.round(x));
-    }
-    var il = $("s0IcL"), ir = $("s0IcR");
-    if (il) il.setAttribute("href", lIc);
-    if (ir) ir.setAttribute("href", rIc);
-    $("s0Sr").textContent = lTx;
-    $("s0Ss").textContent = rTx;
-}
-
-function renderSun(d) {
-    var dl = d.daily, sr = 360, ss = 1080, srS = "06:00", ssS = "18:00";
-    if (dl && dl.sunrise && dl.sunset && dl.sunrise[0] && dl.sunset[0]) {
-        sr = toMin(dl.sunrise[0]); ss = toMin(dl.sunset[0]);
-        srS = dl.sunrise[0].slice(11, 16); ssS = dl.sunset[0].slice(11, 16);
-    }
-    var srT = sr, srTS = srS;
-    if (dl && dl.sunrise && dl.sunrise[1]) { srT = toMin(dl.sunrise[1]); srTS = dl.sunrise[1].slice(11, 16); }
-    SUN = { sr: sr, ss: ss, srS: srS, ssS: ssS, srT: srT, srTS: srTS };
-    placeSun();
-
-    var cur = d.current, times = d.hourly.time, nowStr = cur.time.slice(0, 13);
-    var start = 0, i, k, idx, html = "", hh, icon, temp, code;
-    for (i = 0; i < times.length; i++) {
-        if (times[i].slice(0, 13) === nowStr) { start = i; break; }
-    }
-    for (k = 0; k < S_SLOTS; k++) {
-        idx = start + k * S_STEP;
-        if (idx >= times.length) break;
-        if (k === 0) {
-            hh = "Сейчас";
-            icon = iconFor(effCode(cur.weather_code, cur.cloud_cover), cur.is_day === 1);
-            temp = cur.temperature_2m;
-        } else {
-            hh = times[idx].slice(11, 13) + ":00";
-            code = effCode(d.hourly.weather_code[idx], d.hourly.cloud_cover ? d.hourly.cloud_cover[idx] : null);
-            icon = iconFor(code, d.hourly.is_day[idx] === 1);
-            temp = d.hourly.temperature_2m[idx];
-        }
-        if (k > 0) html += '<div class="vline" style="left:' + (k * 150) + 'px; top:164px; height:68px"></div>';
-        html += '<div class="s0h' + (k === 0 ? ' now' : '') + '" style="left:' + (k * 150 + 8) + 'px">'
-              +   '<div class="l">' + hh + '</div>'
-              +   '<div class="i' + (icon === "ic-sun" ? " sun" : "") + '"><svg viewBox="0 0 100 100"><use href="#' + icon + '"/></svg></div>'
-              +   '<div class="t">' + fmtTemp(temp) + '</div>'
-              + '</div>';
-    }
-    $("s0Hours").innerHTML = html;
-}
-
 function saveCache(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: new Date().getTime(), d: d })); } catch (e) {} }
 function loadCache() {
     try { var s = localStorage.getItem(CACHE_KEY); return s ? JSON.parse(s) : null; }
@@ -1972,8 +1929,9 @@ function loadWeather() {
     if (c && c.d) {
         var fresh = (new Date().getTime() - c.t) < CACHE_MAX_AGE;
         if (!fresh) staleCache = c.d;               // старые данные: текст показываем, а видео ждёт свежую погоду
-        try { render(c.d, !fresh); } catch (e) {}
+      try { render(c.d, !fresh); } catch (e) {}
     }
+        if (!VID.file) { try { var lv = localStorage.getItem("wx_last_vid"); if (lv) vidSet(lv); } catch (e) {} }
     loadWeather();
 })();
 
@@ -1990,12 +1948,98 @@ if (location.search.indexOf("debug") > -1) {
     })).then(function (r) { fontInfo = r.join("\n"); });
     setInterval(function () {
         var v = VID.cur >= 0 ? VID.slots[VID.cur] : null;
-        dbg.textContent = fontInfo + "\n" + lastWx + "\nvideo: " + (VID.file || "нет (SVG-небо)")
+       dbg.textContent = "открыта: " + Math.round((Date.now() - T0) / 1000) + " с\n" + "окно: " + window.innerWidth + "x" + window.innerHeight + "  dpr " + window.devicePixelRatio + "  экран: " + screen.width + "x" + screen.height + "\n" + fontInfo + "\n" + lastWx + "\nvideo: " + (VID.file || "нет (SVG-небо)")
             + (v ? "  x" + v.playbackRate.toFixed(2) + "  t=" + v.currentTime.toFixed(1) + "/" + (v.duration || 0).toFixed(1) + "  " + v.videoWidth + "x" + v.videoHeight : "")
             + (VID.busy ? "  [переход]" : "")
             + "\nжурнал (код|файл):\n" + VID.log.join("\n");
     }, 500);
 }
+
+/* =====================================================================
+   АВТООБНОВЛЕНИЕ: раз в минуту смотрим, не изменился ли index.html на
+   сервере (GitHub Pages). Если изменился — плавно гасим экран и
+   перезагружаем страницу САМИ. Ничего нажимать не нужно.
+   Подробности в консоли (F12 -> Console), строки "[update]".
+   ===================================================================== */
+(function () {
+    if (location.search.indexOf("noupdate") > -1) return;
+    var CHECK_EVERY = 60 * 1000;       // как часто проверять
+    var base = null, updating = false, unsure = false;
+
+    function log() { try { console.log.apply(console, ["[update]"].concat([].slice.call(arguments))); } catch (e) {} }
+    function hash(s) {
+        var h = 5381, i = s.length;
+        while (i) h = (h * 33) ^ s.charCodeAt(--i);
+        return (h >>> 0) + ":" + s.length;
+    }
+    function get(cb, fail) {
+        var x = new XMLHttpRequest();
+        // уникальный ?chk=... обходит кэш браузера, GitHub Pages и service worker
+        x.open("GET", location.pathname + "?chk=" + new Date().getTime(), true);
+        x.timeout = 15000;
+        x.onreadystatechange = function () {
+            if (x.readyState !== 4) return;
+            if (x.status !== 200 || x.responseText.length < 1000) { log("ошибка проверки", x.status); if (fail) fail(); return; }
+            cb(hash(x.responseText));
+        };
+        x.send();
+    }
+    function applyUpdate() {
+        if (updating) return;
+        updating = true;
+        log("найдена новая версия — перезагружаю");
+        var went = false;
+        function go() {
+            if (went) return;
+            went = true;
+            try { document.body.style.transition = "opacity .6s"; document.body.style.opacity = "0"; } catch (e) {}
+            setTimeout(function () { location.reload(); }, 700);
+        }
+        // сначала кладём СВЕЖУЮ копию в кэш браузера, иначе перезагрузка может взять старую
+        try { fetch(location.pathname, { cache: "reload" }).then(go, go); } catch (e) { go(); }
+        setTimeout(go, 5000);
+    }
+    // хэш копии страницы из кэша (то, с чем страница реально была запущена без интернета)
+    function cachedHash(cb) {
+        try {
+            caches.match(location.href).then(function (r) { return r || caches.match("index.html"); })
+                .then(function (r) { return r ? r.text() : ""; })
+                .then(function (t) { cb(t ? hash(t) : null); }, function () { cb(null); });
+        } catch (e) { cb(null); }
+    }
+    function check() {
+        get(function (h) {
+            if (base === null) {
+                if (!unsure) { base = h; log("проверка", h, "(эталон)"); return; }
+                // страница была запущена БЕЗ интернета: эталон — копия из кэша, а не то, что лежит на сервере сейчас
+                cachedHash(function (c) {
+                    base = c || h;
+                    log("интернет вернулся, сравниваю с кэшем", c, h);
+                    if (h !== base) applyUpdate();
+                });
+                return;
+            }
+            log("проверка", h, h === base ? "без изменений" : "ИЗМЕНИЛАСЬ");
+            if (h !== base) applyUpdate();
+        }, function () { if (base === null) unsure = true; });
+    }
+    check();                              // запоминаем «эталон» сразу после загрузки
+    setInterval(check, CHECK_EVERY);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) check(); });
+
+    // офлайн-кэш (sw.js лежит рядом)
+    if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+        navigator.serviceWorker.addEventListener("message", function (e) {
+            if (e.data && e.data.type === "cache") log("офлайн-кэш: " + e.data.cached + " из " + e.data.total + " файлов");
+        });
+        navigator.serviceWorker.ready.then(function (reg) {
+            function ping() { if (reg.active) reg.active.postMessage("precache"); }
+                        setTimeout(ping, 30000);
+            setInterval(ping, 10 * 60 * 1000);
+        });
+    }
+})();
 </script>
 
 </body>
