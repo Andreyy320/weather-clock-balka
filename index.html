@@ -2234,10 +2234,12 @@ if (location.search.indexOf("debug") > -1) {
     var NOINTRO = location.search.indexOf("nointro") > -1;
     var v = document.getElementById("introVid");
     var steps = [], pos = -1, timer = 0, firstRun = true;
+      var REPEATS = 3;                         // сколько раз подряд показывать пару слайдов перед интро
     if (!NOINTRO) steps.push({ intro: true });
-    steps.push({ slide: 0, sec: SLIDE1_SECONDS });
-    steps.push({ slide: 1, sec: SLIDE2_SECONDS });
-
+    for (var r = 0; r < REPEATS; r++) {
+        steps.push({ slide: 0, sec: SLIDE1_SECONDS });
+        steps.push({ slide: 1, sec: SLIDE2_SECONDS });
+    }
     function bg() { return VID.cur >= 0 ? VID.slots[VID.cur] : null; }
     function waitFor(cond, maxMs, cb) {
         var t0 = Date.now();
