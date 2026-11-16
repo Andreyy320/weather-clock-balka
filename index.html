@@ -1165,6 +1165,12 @@ function fitScreen() {
     var s = Math.min(window.innerWidth / 1280, window.innerHeight / 256);
     if (!(s > 0)) return;
     document.body.style.transform = "scale(" + s + ")";
+    /* рамка страницы = размер сцены: в большом окне фон не растягивается, на экране 640x128 ничего не меняется */
+    var de = document.documentElement.style;
+    de.width = Math.round(1280 * s) + "px";
+    de.height = Math.round(256 * s) + "px";
+    de.backgroundRepeat = "no-repeat";
+    de.backgroundColor = "#0b1020";
 }
 fitScreen();
 window.addEventListener("resize", fitScreen);
