@@ -86,14 +86,14 @@ var dop=Math.min(0.72,(lt?0.14:0.06)+(nat?0:(W[2]*0.58+W[1]*0.22)));
 var drgb=W[2]>=0.5?"5,11,44":(W[1]>0.2?(AM?"74,53,80":"42,23,64"):"5,11,44");
 window.earlyDim={op:dop,rgb:drgb};
 try{pp=localStorage.getItem("wx_poster_"+lv);}catch(e){}
-if(pp){var dg="linear-gradient(rgba("+drgb+","+dop+"),rgba("+drgb+","+dop+"))";s.background=dg+" 0 0 / 100% 100% no-repeat,url("+pp+") 0 0 / 100% 100% no-repeat #0b1020";}
+if(false&&pp){var dg="linear-gradient(rgba("+drgb+","+dop+"),rgba("+drgb+","+dop+"))";s.background=dg+" 0 0 / 100% 100% no-repeat,url("+pp+") 0 0 / 100% 100% no-repeat #0b1020";}
 else{
  var g;
  if(0)g="";
  else if(W[1]>=0.35)g=AM?"linear-gradient(#3a4a7c,#e8a98a)":"linear-gradient(#2b2a5c,#d98a6a)";
  else if(W[2]>=0.5)g="linear-gradient(#050b2c,#14224f)";
  else g="linear-gradient(#3f86d6,#a9d3f5)";
- s.background=g;
+ s.background="#0b1020";
 }
 })();
 </script>
@@ -574,6 +574,10 @@ body {
 html.boot .slide.on .card { opacity: 0; }
 html.boot #scrim { transition: none !important; }
 html.boot .scene { display: none; }
+
+/* пока идёт загрузка — скрыто всё, потом плавно проявляется (нет «прыжка» с одной погоды на другую) */
+body { transition: opacity .6s ease; }
+html.boot body { opacity: 0; }
 .slide .card { transition: opacity .35s ease; }
 </style>
 
@@ -1181,11 +1185,17 @@ function bootReveal() {
     bootDone = true;
     document.documentElement.className = document.documentElement.className.replace(/\bboot\b/, "");
 }
-function bootStep(k) {
-    BOOT[k] = 1;
-    if (BOOT.font && BOOT.wx && BOOT.vid) bootReveal();
+/* показываем экран, только когда: шрифты готовы + пришла СВЕЖАЯ погода + играет именно нужный ролик */
+function bootCheck() {
+    if (bootDone || !(BOOT.font && BOOT.wx)) return;
+    if (typeof VID === "undefined") return;
+    var ready = VID.cur >= 0 && !VID.busy && VID.pending === null && VID.file === VID.want;
+    if (ready) { var pv = VID.slots[VID.cur]; ready = pv.readyState >= 3 && pv.currentTime > 0.15; }   // кадр реально идёт
+    if (ready || (VID.want === "" && !VID.busy)) bootReveal();
 }
-setTimeout(bootReveal, 500);
+function bootStep(k) { BOOT[k] = 1; bootCheck(); }
+setInterval(bootCheck, 200);
+setTimeout(bootReveal, 5000);   // запасной вариант, если интернета нет
 (function () {
     if (!document.fonts || !document.fonts.load) { bootStep("font"); return; }
     var f = ['500 20px "SF Pro Display"','400 20px "SF Pro Display"','600 20px "SF Pro Text"','500 20px "SF Pro Text"'], n = 0;
@@ -1300,17 +1310,18 @@ function tsMin(s) {
     return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16)) / 60000;
 }
 
+function locMin(ms) { var q = new Date(ms).toLocaleString("sv-SE", { timeZone: TZ }); return +q.slice(11, 13) * 60 + +q.slice(14, 16); }
 var TOD_AM = false;
+/* время суток считается ТОЙ ЖЕ формулой, что и в начале страницы -> ролик не меняется после запуска */
 function todWeights(d) {
     var cur = d.current, day, night;
-    if (d.daily && d.daily.sunrise && d.daily.sunset && d.daily.sunrise[0] && d.daily.sunset[0]) {
-        var m = toMin(cur.time), sr = toMin(d.daily.sunrise[0]), ss = toMin(d.daily.sunset[0]);
-        TOD_AM = m < 720;  
+    try {
+        var y = +cur.time.slice(0, 4), mo = +cur.time.slice(5, 7) - 1, dd = +cur.time.slice(8, 10);
+        var m = toMin(cur.time), sr = locMin(sunUTC(y, mo, dd, true)), ss = locMin(sunUTC(y, mo, dd, false));
+        TOD_AM = m < 720;
         if (m >= sr && m <= ss) { day = Math.min(1, Math.min(m - sr, ss - m) / 60); night = 0; }
         else { day = 0; night = Math.min(1, (m < sr ? sr - m : m - ss) / 60); }
-    } else {
-        day = cur.is_day === 1 ? 1 : 0; night = 1 - day;
-    }
+    } catch (e) { day = cur.is_day === 1 ? 1 : 0; night = 1 - day; }
     return [day, 1 - day - night, night];
 }
 
@@ -1583,7 +1594,7 @@ function vidSwitch(file) {
               showSvg(false);
 
         VID.cur = idx;
-        fadeIn(nv, VID.fade, function () {
+        fadeIn(nv, bootDone ? VID.fade : 0, function () {   // пока экран скрыт — без плавной смены
             if (old) hideNow(old);
             showSvg(false);                      // видео полностью закрывает небо — небо выключаем
                         setTimeout(function () { savePoster(nv, file); }, 1500);
@@ -1994,6 +2005,7 @@ function updateBigIcon(wcode, isDay) {
 function isDayFromW(w) { return !(w[2] > 0); }   // w[2] > 0 = солнце уже село (или ещё не взошло) -> луна и «Ясно»
 function render(d, noVideo) {
     d = fakeTime(d);
+    try { d.current.time = new Date().toLocaleString("sv-SE", { timeZone: TZ }).slice(0, 16).replace(" ", "T"); } catch (e) {}   // всегда настоящее время, а не время ответа сервера
     LASTD = d;
     var cur = d.current;
     var isDay = isDayFromW(todWeights(d));
@@ -2016,7 +2028,7 @@ document.getElementById("feels1").textContent = "Ощущается как " + f
 
     curWind = +cur.wind_speed_10m || 0;
         try { applyBg(d, noVideo); } catch (e) {}
-    bootStep("wx");
+    if (!window.FROM_CACHE) bootStep("wx");   // старый кэш — не «свежая погода», ждём ответ сервера
 }
 var MONTHS_SHORT = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
 
@@ -2050,7 +2062,8 @@ function loadWeather() {
     function fail() {
         if (done) return;
         done = true;
-        if (staleCache) { try { applyBg(staleCache); } catch (e) {} staleCache = null; }   // интернета нет — берём старые данные
+        if (staleCache) { try { render(staleCache); } catch (e) {} staleCache = null; }   // интернета нет — берём старые данные
+        bootStep("wx");
         setTimeout(loadWeather, REFRESH_FAIL);
     }
     xhr.open("GET", URL_API + "&_=" + new Date().getTime(), true);
@@ -2080,7 +2093,9 @@ function loadWeather() {
     if (c && c.d) {
         var fresh = (new Date().getTime() - c.t) < CACHE_MAX_AGE;
         if (!fresh) staleCache = c.d;               // старые данные: текст показываем, а видео ждёт свежую погоду
+      window.FROM_CACHE = !fresh;
       try { render(c.d, !fresh); } catch (e) {}
+      window.FROM_CACHE = false;
     }
         /* видео стартует СРАЗУ, не дожидаясь ответа погоды: последнее показанное, а если его нет (кэш не живёт) —
        по времени суток. Придёт погода и она другая — плавно сменится. */
