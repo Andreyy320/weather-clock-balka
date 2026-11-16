@@ -2267,6 +2267,7 @@ if (location.search.indexOf("debug") > -1) {
             v.removeEventListener("playing", onPlaying);
             v.removeEventListener("ended", finish);
             v.removeEventListener("error", finish);
+             v.removeEventListener("timeupdate", onTime);
             window.INTRO_ON = false;
             try { flushPending(); } catch (e) {}       // применить смену фона, пришедшую во время интро
             var b = bg(); if (b) safePlay(b);
@@ -2279,7 +2280,7 @@ if (location.search.indexOf("debug") > -1) {
         }
         function onPlaying() {
             v.style.transition = "none"; v.style.opacity = "1";
-            var b = bg(); if (b) b.pause();            // одно видео за раз
+                        var b = bg(); if (b && !warmed) b.pause(); // одно видео за раз (но не в последние секунды)
             if (!started) {
                 started = true;
                 var len = (isFinite(v.duration) && v.duration > 0) ? v.duration : INTRO_MAX;
@@ -2289,7 +2290,17 @@ if (location.search.indexOf("debug") > -1) {
         v.addEventListener("playing", onPlaying);
         v.addEventListener("ended", finish);
         v.addEventListener("error", finish);
-
+        var warmed = false;
+        function onTime() {
+            if (warmed || !(v.duration > 0)) return;
+            if (v.duration - v.currentTime <= 2.5) {      // за 2.5 с до конца интро
+                warmed = true;
+                window.INTRO_ON = false;                  // разрешаем смену фона
+                try { flushPending(); } catch (e) {}
+                var b = bg(); if (b) safePlay(b);         // запускаем погоду под интро
+            }
+        }
+        v.addEventListener("timeupdate", onTime);
         // сторож: если видео зависло — не крутим по кругу, а переходим к погоде
         wd = setInterval(function () {
             if (finished) return;
