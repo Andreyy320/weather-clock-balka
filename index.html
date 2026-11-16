@@ -596,6 +596,9 @@ html.boot .scene { display: none; }
 #feels1 { left: 970px; }
 #d5wrap { width: 1020px; }
 .d5c { width: 204px; }
+/* ===== ВСТУПИТЕЛЬНОЕ ВИДЕО ВНУТРИ СТРАНИЦЫ (лежит поверх всего, страница под ним уже готова) ===== */
+#introVid { position:absolute; left:0; top:0; width:1280px; height:256px; object-fit:cover;
+  z-index:10; opacity:0; background:#000; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -1157,8 +1160,11 @@ html.boot .scene { display: none; }
 </div>
 
 
+<video id="introVid" muted playsinline preload="auto" disablepictureinpicture></video>
 <script>
   var T0 = Date.now();
+/* пока играет интро — фоновое видео погоды НЕ запускается (два видео сразу = рывки/обрыв на слабом плеере) */
+window.INTRO_ON = !/nointro|slide=\d/.test(location.search);
 
 /* подгонка под размер экрана: сцена 1280x256 масштабируется под окно (640x128 -> 0.5) */
 function fitScreen() {
@@ -1642,6 +1648,7 @@ function vidHide() {
 }
 
 function vidSet(file) {
+    if (window.INTRO_ON) { VID.pending = file; return; }   // интро идёт — запомним, применим после него
     if (VID.busy) { VID.pending = file; return; }
     if (file === VID.file) return;
     if (!file) vidHide(); else vidSwitch(file);
@@ -1661,6 +1668,7 @@ setInterval(function () {
 /* сторожок: пауза/зависание -> перезапуск */
 var wdLast = -1, wdStuck = 0;
 function watchdog() {
+    if (window.INTRO_ON) { wdStuck = 0; return; }
     if (VID.cur < 0 || VID.busy) { wdStuck = 0; return; }
     var v = VID.slots[VID.cur];
     if (v.paused && !v.ended) { safePlay(v); wdStuck = 0; return; }
@@ -1783,7 +1791,6 @@ function setCardFx(code, isDay) { return; }
   ===================================================================== */
 
 
-var SLIDE_SECONDS = 10;
 var slideEls = [document.getElementById("slide1"), document.getElementById("slide2")];
 var curSlide = 0;
 function showSlide(i) {
@@ -1797,13 +1804,6 @@ function showSlide(i) {
     var m = location.search.match(/slide=(\d)/);
     if (m && +m[1] >= 1 && +m[1] <= slideEls.length) { showSlide(+m[1] - 1); return; }
     showSlide(0);
-        var lastSw = Date.now();
-    setInterval(function () {
-        var n = Date.now();
-        if (n - lastSw < SLIDE_SECONDS * 1000 - 300) return;
-        lastSw = n;
-        showSlide((curSlide + 1) % slideEls.length);
-    }, 1000);
 })();
 
 
@@ -2162,6 +2162,7 @@ if (location.search.indexOf("debug") > -1) {
     }
     function applyUpdate() {
         if (updating) return;
+        if (window.INTRO_ON) { setTimeout(applyUpdate, 3000); return; }   // не обрываем интро
         updating = true;
         log("найдена новая версия — перезагружаю");
         var went = false;
@@ -2215,6 +2216,100 @@ if (location.search.indexOf("debug") > -1) {
             setInterval(ping, 10 * 60 * 1000);
         });
     }
+})();
+
+/* =====================================================================
+   ЕДИНЫЙ ЦИКЛ, СТРОГО ПО ПОРЯДКУ:
+     1) интро-видео (играет до конца)  ->  2) время и погода  ->  3) прогноз на 5 дней  ->  снова 1)
+   Настройки — три строки ниже.
+   Без интро: index.html?nointro      Один слайд навсегда: index.html?slide=2
+   ===================================================================== */
+(function () {
+    var INTRO_FILE    = "assets/intro.mp4";  // имя видео в папке assets
+    var INTRO_MAX     = 103;                 // примерная длина видео, сек (запасной таймер)
+    var SLIDE1_SECONDS = 10;                 // сколько показывать «время и погода»
+    var SLIDE2_SECONDS = 10;                 // сколько показывать «прогноз на 5 дней»
+    if (/slide=\d/.test(location.search)) return;
+
+    var NOINTRO = location.search.indexOf("nointro") > -1;
+    var v = document.getElementById("introVid");
+    var steps = [], pos = -1, timer = 0, firstRun = true;
+    if (!NOINTRO) steps.push({ intro: true });
+    steps.push({ slide: 0, sec: SLIDE1_SECONDS });
+    steps.push({ slide: 1, sec: SLIDE2_SECONDS });
+
+    function bg() { return VID.cur >= 0 ? VID.slots[VID.cur] : null; }
+    function waitFor(cond, maxMs, cb) {
+        var t0 = Date.now();
+        (function poll() { if (cond() || Date.now() - t0 > maxMs) cb(); else setTimeout(poll, 100); })();
+    }
+
+    function next() {
+        clearTimeout(timer);
+        pos = (pos + 1) % steps.length;
+        var s = steps[pos];
+        if (s.intro) runIntro(next);
+        else { showSlide(s.slide); timer = setTimeout(next, s.sec * 1000); }
+    }
+
+    function runIntro(done) {
+        var finished = false, started = false, startedAt = Date.now(), lastT = -1, stuck = 0, wd = 0, hard = 0;
+        window.INTRO_ON = true;                       // с этого момента фон погоды не трогаем
+        if (firstRun) { v.style.transition = "none"; v.style.opacity = "1"; }   // при старте сразу чёрный, без показа погоды
+        firstRun = false;
+
+        function finish() {
+            if (finished) return;
+            finished = true;
+            clearInterval(wd); clearTimeout(hard);
+            v.removeEventListener("playing", onPlaying);
+            v.removeEventListener("ended", finish);
+            v.removeEventListener("error", finish);
+            window.INTRO_ON = false;
+            try { flushPending(); } catch (e) {}       // применить смену фона, пришедшую во время интро
+            var b = bg(); if (b) safePlay(b);
+            // последний кадр интро держим, пока фон погоды не готов — чёрного экрана не будет
+            waitFor(function () { return !VID.busy; }, 6000, function () {
+                done();                                // показать слайд 1
+                v.style.transition = "opacity .4s ease"; v.style.opacity = "0";
+                setTimeout(function () { try { v.pause(); } catch (e) {} }, 450);
+            });
+        }
+        function onPlaying() {
+            v.style.transition = "none"; v.style.opacity = "1";
+            var b = bg(); if (b) b.pause();            // одно видео за раз
+            if (!started) {
+                started = true;
+                var len = (isFinite(v.duration) && v.duration > 0) ? v.duration : INTRO_MAX;
+                hard = setTimeout(finish, (len + 10) * 1000);
+            }
+        }
+        v.addEventListener("playing", onPlaying);
+        v.addEventListener("ended", finish);
+        v.addEventListener("error", finish);
+
+        // сторож: если видео зависло — не крутим по кругу, а переходим к погоде
+        wd = setInterval(function () {
+            if (finished) return;
+            if (!started) { if (Date.now() - startedAt > 40000) finish(); return; }
+            if (v.paused && !v.ended) safePlay(v);
+            if (v.currentTime === lastT) stuck++; else stuck = 0;
+            lastT = v.currentTime;
+            if (stuck >= 15) finish();
+        }, 1000);
+
+        // ждём, пока закончится возможная смена фона, и запускаем интро
+        waitFor(function () { return !VID.busy; }, 5000, function () {
+            if (finished) return;
+            v.muted = true; v.defaultMuted = true; v.loop = false;
+            try { v.currentTime = 0; } catch (e) {}
+            var p; try { p = v.play(); } catch (e2) { p = null; }
+            if (p && p.catch) p.catch(function () { finish(); });
+        });
+    }
+
+    if (!NOINTRO) { v.muted = true; v.defaultMuted = true; v.loop = false; v.src = INTRO_FILE; v.load(); }
+    next();
 })();
 </script>
 
