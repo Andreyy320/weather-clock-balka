@@ -6,7 +6,7 @@
 // (например 'weather-assets-v2'), иначе будет отдаваться старый файл из кэша.
 // Новое видео/шрифт добавил — впиши его в ASSET_LIST ниже (хотя и без этого оно закэшируется при первом показе).
 
-var CACHE  = 'weather-screen-v10';
+var CACHE  = 'weather-screen-v11';
 var ASSETS = 'weather-assets-v5';
 
 var ASSET_LIST = [
